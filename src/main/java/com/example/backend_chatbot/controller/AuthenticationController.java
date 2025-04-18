@@ -6,11 +6,14 @@ import com.example.backend_chatbot.dto.response.AuthenticationResponse;
 import com.example.backend_chatbot.dto.response.IntrospectResponse;
 import com.example.backend_chatbot.dto.response.ResponseDTO;
 import com.example.backend_chatbot.service.AuthenticationService;
+import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.text.ParseException;
 
 @RestController
 @RequestMapping("/auth")
@@ -18,12 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
-    public ResponseDTO<IntrospectResponse> introspect(@RequestBody IntrospectRequest introspectRequest) {
-
+    @PostMapping("/introspect")
+    public ResponseDTO<IntrospectResponse> introspect(@RequestBody IntrospectRequest introspectRequest) throws JOSEException, ParseException {
+        var result = authenticationService.introspect(introspectRequest);
         return ResponseDTO.<IntrospectResponse>builder()
-                .data(null)
-                .message(null)
-                .status(null)
+                .data(result)
+                .message("Authentication successful")
+                .status(200)
                 .build();
     }
 
@@ -33,7 +37,7 @@ public class AuthenticationController {
         return ResponseDTO.<AuthenticationResponse>builder()
                 .data(authObject)
                 .status(200)
-                .message("Authentication succeeded")
+                .message("Authentication successful")
                 .build();
     }
 }

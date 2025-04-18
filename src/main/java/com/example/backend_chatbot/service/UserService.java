@@ -17,6 +17,14 @@ public class UserService {
     public void createUser(UserRequest request) {
         User user = new User();
         user.setUserName(request.getUsername());
+
+
+
+        /// Thuật toán Bcrypt được sử dụng để mã hóa password
+        /// Mỗi lần encode thì nó sẽ tạo 1 chuỗi salt ngẫu nhiên khiến cho hacker khó dùng được dictionary attack
+        /// Dictionary attack: Hacker hash trc 1 số lượng mật khẩu sau đó match với mk trong database của user
+        /// Param được truyền vào thường là độ mạnh của password (int) -> Default là 10,
+        /// lưu ý càng khó thì thuật toán chạy lâu => Ảnh hưởng đến hiệu suất
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 

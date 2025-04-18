@@ -1,0 +1,35 @@
+#spring.application.name=backend_chatbot
+#
+#spring.datasource.url=jdbc:mysql://localhost:3306/chatbot
+#spring.datasource.username=root
+#spring.datasource.password=123456
+#spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+#
+#spring.jpa.hibernate.ddl-auto=update
+#spring.jpa.show-sql=true
+#spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+
+# C?ng gi?ng application.properties nh?ng có c?u trúc phân t?ng
+server:
+  port: 8080
+  servlet:
+    context-path: /chatbot_service
+
+
+spring:
+  application:
+    name: backend_chatbot
+  datasource:
+    url: jdbc:mysql://localhost:3306/chatbot
+    username: root
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+jwt: # Khi lên môi tr??ng cao h?n thì devops s? override l?i key ? d??i
+  signerKey: WI5UDs7wSDBKhfb4IWdLriRbkKkfAyirGlVABDfSKrFS+4mRLzYjtBZZTRuNU6eJ

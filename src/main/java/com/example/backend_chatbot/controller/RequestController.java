@@ -4,10 +4,13 @@ import com.example.backend_chatbot.dto.response.MessageReply;
 import com.example.backend_chatbot.dto.request.MessageRequest;
 import com.example.backend_chatbot.dto.response.ResponseDTO;
 import com.example.backend_chatbot.service.RequestService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class RequestController {
     private final RequestService requestService;
 
@@ -17,6 +20,11 @@ public class RequestController {
 
     @PostMapping("/request")
     public ResponseDTO<MessageReply> request(@RequestBody MessageRequest request){
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Username: ", authentication.getName());
+        authentication.getAuthorities().forEach(grantedAuthority -> log.info("GrantedAuthority: ", grantedAuthority));
+
+
         return ResponseDTO.<MessageReply>builder()
                 .data(requestService.getAnswerFromChatBot(request))
                 .status(200)
