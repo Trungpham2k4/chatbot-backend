@@ -33,3 +33,5 @@ spring:
 
 jwt: # Khi len moi truong cao hon thi devops se override lai key o duoi
   signerKey: WI5UDs7wSDBKhfb4IWdLriRbkKkfAyirGlVABDfSKrFS+4mRLzYjtBZZTRuNU6eJ
+  valid-duration: 1 # Hour
+  refreshable-duration: 24  # Hour

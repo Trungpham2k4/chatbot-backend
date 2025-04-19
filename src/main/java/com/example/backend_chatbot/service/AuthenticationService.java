@@ -49,12 +49,20 @@ public class AuthenticationService {
     @Value("${jwt.signerKey}")
     protected String SIGN_KEY;
 
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    protected long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    protected long REFRESHABLE_DURATION;
+
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         String token = request.getToken();
 
         boolean isvalid = true;
         try{
-            verifyToken(token);
+            verifyToken(token, false,false);
         }catch (RuntimeException e){
             isvalid = false;
         }
@@ -101,7 +109,7 @@ public class AuthenticationService {
                 .subject(user.getUserName()) /// Đại diện cho user đăng nhập
                 .issuer("trungpham") /// Xác định token đc issue từ ai
                 .issueTime(new Date()) /// tgian issue ( hiện tại )
-                .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())) /// Thời hạn của token
+                .expirationTime(new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.HOURS).toEpochMilli())) /// Thời hạn của token
                 .claim("scope", buildScope(user))
                 .jwtID(UUID.randomUUID().toString())
                 .build();
@@ -129,26 +137,38 @@ public class AuthenticationService {
     }
 
     public void logout(LogoutRequest token) throws ParseException, JOSEException {
-        SignedJWT tok = verifyToken(token.getToken());
+        try {
+            /// isRefresh là true vì có thể xảy ra trường hợp user logout sau tgian hết hạn của token
+            /// => Token hết hạn k đc lưu vào invalidate token =>
+            SignedJWT tok = verifyToken(token.getToken(), false, true);
 
-        String JWTid = tok.getJWTClaimsSet().getJWTID();
-        Date expirationTime = tok.getJWTClaimsSet().getExpirationTime();
+            String JWTid = tok.getJWTClaimsSet().getJWTID();
+            Date expirationTime = tok.getJWTClaimsSet().getExpirationTime();
 
-        InvalidatedToken invalidatedToken = new InvalidatedToken(JWTid, expirationTime);
+            InvalidatedToken invalidatedToken = new InvalidatedToken(JWTid, expirationTime);
 
-        invalidateTokenRepo.save(invalidatedToken);
+            invalidateTokenRepo.save(invalidatedToken);
+        }catch (RuntimeException e){
+            log.info("Token already expired");
+        }
+
 
     }
 
 
-    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+    private SignedJWT verifyToken(String token, boolean isRefresh, boolean isLogout) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGN_KEY);
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
 
-        /// Kiểm tra token có hết hạn k
-        Date expireTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        /// Kiểm tra token có hết hạn k, chỉ có trường hợp inspect mới lấy expiration time hiện tại của token, còn lại
+        /// logout và refresh token thì sẽ cộng tgian hết hạn mới
+        Date expireTime = (isRefresh) ? new Date(signedJWT.getJWTClaimsSet().getIssueTime()
+                .toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.HOURS).toEpochMilli())
+                : (isLogout) ? new Date(signedJWT.getJWTClaimsSet().getIssueTime()
+                .toInstant().plus(2, ChronoUnit.HOURS).toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
 
         /// Kiểm tra token có hợp lệ k (có bị thay đổi gì k)
         boolean verified = signedJWT.verify(verifier);
@@ -168,7 +188,7 @@ public class AuthenticationService {
     public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws ParseException, JOSEException {
 
         /// Check xem token còn hiệu lực k
-        SignedJWT jwt = verifyToken(request.getToken());
+        SignedJWT jwt = verifyToken(request.getToken(), true,false);
 
         /// Lưu token đó vào list token hết hạn
         String JWTid = jwt.getJWTClaimsSet().getJWTID();

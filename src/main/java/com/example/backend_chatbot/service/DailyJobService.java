@@ -17,9 +17,9 @@ public class DailyJobService {
     private final InvalidateTokenRepo invalidateTokenRepo;
 
     /**
-     * Cron job xóa token hết hạn vào 00:00
+     * Cron job xóa token hết hạn mỗi 1 tiếng
      */
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void deleteExpiryToken(){
         invalidateTokenRepo.deleteExpireToken();
