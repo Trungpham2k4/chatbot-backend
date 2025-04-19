@@ -27,9 +27,9 @@ public class User {
     private String hashPassword;
     private Set<String> roles;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user_id")
-    @Fetch(FetchMode.SUBSELECT)
-    private List<Conversation> conversations;
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+//    @Fetch(FetchMode.SUBSELECT)
+//    private List<Conversation> conversations;
 
 
 }

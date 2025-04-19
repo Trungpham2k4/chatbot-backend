@@ -21,8 +21,8 @@ public class RequestController {
     @PostMapping("/request")
     public ResponseDTO<MessageReply> request(@RequestBody MessageRequest request){
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        log.info("Username: ", authentication.getName());
-        authentication.getAuthorities().forEach(grantedAuthority -> log.info("GrantedAuthority: ", grantedAuthority));
+        log.info("Username: {}", authentication.getName());
+        authentication.getAuthorities().forEach(grantedAuthority -> log.info("GrantedAuthority: {}", grantedAuthority));
 
 
         return ResponseDTO.<MessageReply>builder()
@@ -36,6 +36,20 @@ public class RequestController {
     public ResponseDTO<MessageReply> guest(@RequestBody MessageRequest request){
         return ResponseDTO.<MessageReply>builder()
                 .data(requestService.guessGetAnswer(request))
+                .status(200)
+                .message("Conversation successful")
+                .build();
+    }
+
+
+    @PostMapping("/test")
+    public ResponseDTO<MessageReply> test(@RequestBody MessageRequest request){
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Username: {}", authentication.getName());
+        authentication.getAuthorities().forEach(grantedAuthority -> log.info("GrantedAuthority: {}", grantedAuthority));
+
+        return ResponseDTO.<MessageReply>builder()
+                .data(null)
                 .status(200)
                 .message("test success")
                 .build();

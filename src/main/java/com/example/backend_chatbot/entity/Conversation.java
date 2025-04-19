@@ -25,11 +25,11 @@ public class Conversation {
     private LocalDateTime requestTime;
     private LocalDateTime responseTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user_id;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "user_id")
+//    private User user;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "conversation_id")
-    @Fetch(FetchMode.SUBSELECT)
-    private List<Message> messages;
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "conversation_id")
+//    @Fetch(FetchMode.SUBSELECT)
+//    private List<Message> messages;
 }

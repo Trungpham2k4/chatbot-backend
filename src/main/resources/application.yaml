@@ -9,11 +9,11 @@
 #spring.jpa.show-sql=true
 #spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
 
-# C?ng gi?ng application.properties nh?ng c� c?u tr�c ph�n t?ng
+# Cung giong application.properties nhung co cau truc phan tang
 server:
   port: 8080
   servlet:
-    context-path: /chatbot_service
+    context-path: /chatbot_service # Co context path để sau làm microservice thì api gateway điều hướng đến đúng service => Sẽ có trên url
 
 
 spring:
@@ -31,5 +31,5 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
-jwt: # Khi l�n m�i tr??ng cao h?n th� devops s? override l?i key ? d??i
+jwt: # Khi len moi truong cao hon thi devops se override lai key o duoi
   signerKey: WI5UDs7wSDBKhfb4IWdLriRbkKkfAyirGlVABDfSKrFS+4mRLzYjtBZZTRuNU6eJ

@@ -2,9 +2,13 @@ package com.example.backend_chatbot.service;
 
 import com.example.backend_chatbot.dto.request.AuthenticationRequest;
 import com.example.backend_chatbot.dto.request.IntrospectRequest;
+import com.example.backend_chatbot.dto.request.LogoutRequest;
+import com.example.backend_chatbot.dto.request.RefreshTokenRequest;
 import com.example.backend_chatbot.dto.response.AuthenticationResponse;
 import com.example.backend_chatbot.dto.response.IntrospectResponse;
+import com.example.backend_chatbot.entity.InvalidatedToken;
 import com.example.backend_chatbot.entity.User;
+import com.example.backend_chatbot.repository.InvalidateTokenRepo;
 import com.example.backend_chatbot.repository.UserRepo;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -29,6 +33,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 
 @Service
@@ -38,6 +43,7 @@ import java.util.StringJoiner;
 public class AuthenticationService {
 
     private final UserRepo userRepo;
+    private final InvalidateTokenRepo invalidateTokenRepo;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -46,19 +52,15 @@ public class AuthenticationService {
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         String token = request.getToken();
 
-        JWSVerifier verifier = new MACVerifier(SIGN_KEY);
-
-        SignedJWT signedJWT = SignedJWT.parse(token);
-
-
-        /// Kiểm tra token có hết hạn k
-        Date expireTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-
-        /// Kiểm tra token có hợp lệ k (có bị thay đổi gì k)
-        boolean verified = signedJWT.verify(verifier);
+        boolean isvalid = true;
+        try{
+            verifyToken(token);
+        }catch (RuntimeException e){
+            isvalid = false;
+        }
 
         return IntrospectResponse.builder()
-                .valid(verified && Date.from(Instant.now()).after(expireTime))
+                .valid(isvalid)
                 .build();
     }
 
@@ -101,6 +103,7 @@ public class AuthenticationService {
                 .issueTime(new Date()) /// tgian issue ( hiện tại )
                 .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())) /// Thời hạn của token
                 .claim("scope", buildScope(user))
+                .jwtID(UUID.randomUUID().toString())
                 .build();
         Payload payload = new Payload(claimsSet.toJSONObject());
         JWSObject object = new JWSObject(header, payload);
@@ -123,5 +126,68 @@ public class AuthenticationService {
             user.getRoles().forEach(stringJoiner::add);
         }
         return stringJoiner.toString();
+    }
+
+    public void logout(LogoutRequest token) throws ParseException, JOSEException {
+        SignedJWT tok = verifyToken(token.getToken());
+
+        String JWTid = tok.getJWTClaimsSet().getJWTID();
+        Date expirationTime = tok.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = new InvalidatedToken(JWTid, expirationTime);
+
+        invalidateTokenRepo.save(invalidatedToken);
+
+    }
+
+
+    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+        JWSVerifier verifier = new MACVerifier(SIGN_KEY);
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+
+        /// Kiểm tra token có hết hạn k
+        Date expireTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        /// Kiểm tra token có hợp lệ k (có bị thay đổi gì k)
+        boolean verified = signedJWT.verify(verifier);
+
+        if (!(verified && expireTime.after(new Date()))){
+            throw new RuntimeException("Invalid token");
+        }
+
+        /// kiểm tra token logout chưa
+        if(invalidateTokenRepo.findById(signedJWT.getJWTClaimsSet().getJWTID()).isPresent()){
+            throw new RuntimeException("Invalid token");
+        }
+
+        return signedJWT;
+    }
+
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws ParseException, JOSEException {
+
+        /// Check xem token còn hiệu lực k
+        SignedJWT jwt = verifyToken(request.getToken());
+
+        /// Lưu token đó vào list token hết hạn
+        String JWTid = jwt.getJWTClaimsSet().getJWTID();
+        Date expirationTime = jwt.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = new InvalidatedToken(JWTid, expirationTime);
+        invalidateTokenRepo.save(invalidatedToken);
+
+        /// Tìm user để gen token mới
+        String username = jwt.getJWTClaimsSet().getSubject();
+
+        User user = userRepo.findByUserName(username).orElseThrow(() -> new RuntimeException("User not found"));
+
+        String newToken = generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(newToken)
+                .authenticated(true)
+                .build();
+
     }
 }
