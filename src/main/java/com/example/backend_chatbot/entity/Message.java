@@ -20,7 +20,7 @@ public class Message {
     private LocalDateTime requestTime;
     private LocalDateTime responseTime;
 
-//    @ManyToOne
-//    @JoinColumn(name = "conversation_id")
-//    private Conversation conversation_id;
+    @ManyToOne
+    @JoinColumn(name = "conversation_id")
+    private Conversation conversation_id;
 }

@@ -17,11 +17,12 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseDTO<String> register(@RequestBody UserRequest userRequest) {
-        userService.createUser(userRequest);
-        return ResponseDTO.<String>builder()
+    public ResponseDTO<UserInfoResponse> register(@RequestBody UserRequest userRequest) {
+        UserInfoResponse info = userService.createUser(userRequest);
+        return ResponseDTO.<UserInfoResponse>builder()
                 .status(201)
                 .message("Register success")
+                .data(info)
                 .build();
     }
     @GetMapping("/get")

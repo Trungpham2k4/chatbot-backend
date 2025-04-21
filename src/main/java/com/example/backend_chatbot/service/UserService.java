@@ -7,6 +7,7 @@ import com.example.backend_chatbot.entity.User;
 import com.example.backend_chatbot.enums.Roles;
 import com.example.backend_chatbot.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,7 +23,7 @@ import java.util.List;
 public class UserService {
     private final UserRepo userRepo;
 
-    public void createUser(UserRequest request) {
+    public UserInfoResponse createUser(UserRequest request) {
         User user = new User();
         user.setUserName(request.getUsername());
 
@@ -42,7 +43,14 @@ public class UserService {
         HashSet<String> roles = new HashSet<>();
         roles.add(Roles.USER.name());
         user.setRoles(roles);
-        userRepo.save(user);
+
+        try{
+            userRepo.save(user);
+        }catch (DataIntegrityViolationException e){
+            throw new DataIntegrityViolationException("User already exists");
+        }
+
+        return new UserInfoResponse(user.getUserName(), user.getEmail(), user.getRoles());
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -21,15 +21,12 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
-    private String response;
-    private LocalDateTime requestTime;
-    private LocalDateTime responseTime;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id")
-//    private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user_id;
 
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "conversation_id")
-//    @Fetch(FetchMode.SUBSELECT)
-//    private List<Message> messages;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "conversation_id")
+    @Fetch(FetchMode.SUBSELECT)
+    private List<Message> messages;
 }

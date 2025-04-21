@@ -22,14 +22,15 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci" , unique = true)
     private String userName;
     private String email;
     private String hashPassword;
     private Set<String> roles;
 
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-//    @Fetch(FetchMode.SUBSELECT)
-//    private List<Conversation> conversations;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user_id")
+    @Fetch(FetchMode.SUBSELECT)
+    private List<Conversation> conversations;
 
 
 }

@@ -80,6 +80,9 @@ public class AuthenticationService {
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         PasswordEncoder encoder = new BCryptPasswordEncoder(10);
 
+        log.info("Username: {}", request.getUsername());
+        log.info("Password: {}", request.getPassword());
+
         User user = userRepo.findByUserName(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

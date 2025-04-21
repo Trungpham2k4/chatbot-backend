@@ -54,8 +54,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception{
         // Cơ bản nhất: chặn những endpoint nào user có thể vào
-        httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(PUBLIC_ENDPOINTS).permitAll() /// Tất cả request của user đều có thể qua
+        httpSecurity.authorizeHttpRequests(request -> request
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() /// Preflight request
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll() /// Tất cả request của user đều có thể qua
                         .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/test")
 //                        .hasAuthority("ROLE_USER")  /// Xài 1 trong 2 cách đều ổn, cách dưới thì nó sẽ tìm trong authority xem có user nào có role đó k
@@ -94,9 +95,10 @@ public class SecurityConfig {
     public CorsFilter corsFilter(){
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.addAllowedOrigin("http://localhost:3000"); /// Cho phép api được gọi từ trang web nào
+        corsConfiguration.addAllowedOrigin("http://localhost:5173"); /// Cho phép api được gọi từ trang web nào
         corsConfiguration.addAllowedMethod("*"); /// Cho phép tất cả method có thể được gọi từ phía browser
         corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration); /// Áp dụng cors config cho tất cả endpoint
